@@ -88,17 +88,31 @@ def _build_skill_param(user, vaccines: list) -> list:
                        'startTimeUnx': _start_time_unix})
     return params
 
+def wait_vaccines(mm):
+    while 1:
+        vaccine=mm._get_vaccine_list()
+        if vaccine is not None:
+            mm.make_cache()
+            sleep(1)
+            break
+        sleep(10)
 
-def run(miao_miao, max_workers=None, single=False, proxy=False):
+
+def sec_kill(miao_miao, max_workers=None, single=False, proxy=False):
     # 获取疫苗信息(默认选取第一个待秒疫苗)
     vaccines = miao_miao.get_vaccine_list_cache()
     # 获取秒杀人信息
     user = miao_miao.get_user_cache()
+
     # 选取秒杀即将开始的疫苗列表
-    params = _build_skill_param(user[0], vaccines)
-    if not params:
-        print('秒杀还未开始,请开始前5S执行')
-        exit(0)
+    while 1:
+        params = _build_skill_param(user[0], vaccines)
+        if not params:
+            print('秒杀还未开始...')
+            sleep(5)
+            continue
+        break
+    
     # 是否单点疫苗秒杀
     params = params if not single else params[:1]
     # 是否使用IP代理池
@@ -140,7 +154,6 @@ def _get_arguments():
     """))
     parser.add_argument('-mw', '--max_workers', type=_valid_int_type, default=min(32, cpu_count() + 4),
                         help='最大线工作线程数 默认使用 min(32, os.cpu_count() + 4)')
-    parser.add_argument('-reload_cache', action='store_true', help='刷新--region_code疫苗列表本地缓存')
     parser.add_argument('-sp', '--single_point', action='store_true',
                         help='只秒杀单个疫苗[即所有线程秒杀同一个疫苗] 默认不开启该参数则所有线程分配秒杀所有可秒杀疫苗')
     parser.add_argument('-pi', '--proxy_ip', action='store_true', help='使用IP代理池 默认不开启该参数')
@@ -160,7 +173,6 @@ if __name__ == '__main__':
         config=json.load(f)
     
     mm = MiaoMiao(config["tk"], config["cookie"], config["region_code"])
-    if args.reload_cache:
-        mm.init_data_json()
-    run(mm, args.max_workers, args.single_point, args.proxy_ip)
+    wait_vaccines(mm)
+    sec_kill(mm, args.max_workers, args.single_point, args.proxy_ip)
     

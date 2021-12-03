@@ -155,7 +155,7 @@ class MiaoMiao():
         res_vaccine = MiaoMiao._get(URLS['VACCINE_LIST'], params=req_param_list, headers=self._headers, verify=False)
         if '0000' != res_vaccine['code']:
             print(res_vaccine['msg'])
-            exit(1)
+            return
 
         datas = res_vaccine['data']
         if not datas:
@@ -163,7 +163,7 @@ class MiaoMiao():
             _cache_file = f'{CACHE_DIR}/vaccines_{self._region_code}.json'
             if os.path.exists(_cache_file):
                 os.remove(_cache_file)
-            exit(0)
+            return
         return datas
 
     @cache_json('vaccines.json')
@@ -179,7 +179,7 @@ class MiaoMiao():
         if '0000' == res_json['code']:
             return res_json['data']
         print(f'{self._region_code}获取用户信息失败:{res_json}')
-        exit(1)
+        return
 
     @cache_json('user.json')
     def get_user_cache(self):
@@ -211,14 +211,20 @@ class MiaoMiao():
         _md5_salt = md5(f'{_ori_md5}{ECC_HS_SALT}'.encode('utf-8'))
         self._headers['ecc-hs'] = _md5_salt.hexdigest()
 
-    def init_data_json(self):
+    def make_cache(self):
         """
         初始化疫苗数据和接种人数据
         缓存本地
         """
+        user=self._get_user
+        vaccine=self._get_vaccine_list()
+        if user is None or vaccine is None:
+            return False
         data_dict = {'user': self._get_user(), 'vaccines': self._get_vaccine_list()}
         if not os.path.exists(CACHE_DIR):
             os.makedirs(CACHE_DIR)
         for k, v in data_dict.items():
             with open(f'{CACHE_DIR}/{k}_{self._region_code}.json', 'w', encoding='utf-8') as f:
                 json.dump(v, f, ensure_ascii=False, indent=4)
+        
+        return True

@@ -58,6 +58,6 @@ if __name__ == '__main__':
         config=json.load(f)
     # 服务器似乎根据用户ID做了防爬频率限制 经测试且扫描全城市实际场景 max_workers=2即可
     with ThreadPoolExecutor(max_workers=2) as t:
-        fs = [t.submit(MiaoMiao(config["tk"], config["cookie"], rc).init_data_json) for rc in REGION_CODES]
+        fs = [t.submit(MiaoMiao(config["tk"], config["cookie"], rc).make_cache) for rc in REGION_CODES]
         wait(fs, 180, return_when=ALL_COMPLETED)
     print("========DONE=======")
