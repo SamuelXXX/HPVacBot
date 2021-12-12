@@ -57,9 +57,16 @@ if __name__=="__main__":
     for item in data["list"]:
         print(item["id"])
         vac_result=bot.query_vaccine_detail(item["id"])
-        if vac_result and len(vac_result["list"])!=0 and vac_result["list"][0]["date"]!="暂无":
-            print(vac_result["list"][0]["date"])
-            print("%s:%s"%(vac_result["addr"],vac_result["list"][0]["date"]))
+        if vac_result and len(vac_result["list"])!=0:
+            # print(vac_result)
+            for vac in vac_result["list"]:
+                if vac["date"]=="暂无":
+                    continue
+
+                if vac["text"]!="九价人乳头瘤病毒疫苗":
+                    continue
+                print(vac["date"])
+                print("%s:%s"%(vac_result["addr"],vac["date"]))
         
         time.sleep(0.5)
     
